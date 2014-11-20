@@ -3,42 +3,53 @@
 
 #short script doing a PCA on a 2 dim data set, data set is given by a 
 #gaussian desitribution with the following mean an d cov matrix
+library("MASS")
+
 mu = c(1,2)
 sigma = matrix(c(2.0,1.3, 1.3, 1.0),2,2)
 n = 1000
 
 
-gauss = mvrnorm(n, mu, sigma)
-plot(gauss[,1], gauss[,2], xlab = "x",ylab = "y")
+data = mvrnorm(n, mu, sigma)
+plot(gauss[,1], gauss[,2],main = "data", xlab = "x",ylab = "y")
 
 #calculate eigenvecotr matrix
-center_of_mass = 1/n * sum(gauss)
-gauss_normalized = gauss - center_of_mass
-plot(gauss_normalized[,1], gauss_normalized[,2], xlab = "x",ylab = "y")
-gauss_normalized_t = t(gauss_normalized)
-cov = 1/n * (gauss_normalized_t %*% gauss_normalized)
+cov = cov(data)
+print(cov)
 eigen_ = eigen(cov)
 eigenvalues = eigen_$values
-data_projected = gauss_normalized %*% eigen_$vectors
-plot(data_projected[,1], data_projected[,2], xlab = "x",ylab = "y")
 
+#transform data
+Q = eigen_$vectors * -1
+print(Q)
+trans_data = gauss %*% Q
+plot(trans_data[,1], trans_data[,2],main = "transformend Data", xlab = "x",ylab = "y")
+
+red_trans_data==0
+red_data=0
 #choose more significant PC
 if(eigenvalues[1] > eigenvalues[2]){
-  red_data_projected = data_projected[,1]
-  red_gauss = gauss_normalized[,1]
+  red_trans_data= trans_data[,1]
+  red_data = data[,1]
+  red_trans_data <- cbind(red_trans_data, mean(trans_data[,2]))
+  red_data <- cbind(red_data, mean(data[,2]))
 }else {
-  red_data_projected = data_projected[,2]
-  red_gauss = gauss_normalized[,2]
+  red_trans_data = trans_data[,2]
+  red_gauss = data[,2]
+  red_trans_data <- cbind(red_trans_data, mean(trans_data[,1]))
+  red_data <- cbind(red_data, mean(data[,1]))
   
 }
 
+plot(red_trans_data[,1], red_trans_data[,2],main = "reduced transformend Data")
+plot(red_data[,1], red_data[,2],main = "reduced Data")
+
 #calculate mean squarred error
 #for the transformed data
-trans_mu_ = 1/n * sum(red_data_projected)
-trans_var_ = 1/n * sum((red_data_projected-trans_mu_)*(red_data_projected-trans_mu_))
-trans_MSE = trans_var_/n
-
-#for the reduced original data
-orig_mu_ = 1/n * sum(red_gauss)
-orig_var_ = 1/n * sum((red_gauss-orig_mu_)*(red_gauss-orig_mu_))
-orig_MSE = orig_var_/n
+diff_red_data = trans_data - red_trans_data
+trans_MSE  = mean(diff_red_data^2)
+print(trans_MSE)
+#for the original data
+diff_data = data - red_data
+orig_MSE  = mean(diff_data^2)
+print(orig_MSE)
